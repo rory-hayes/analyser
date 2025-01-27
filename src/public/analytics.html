@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics - Notion Visualizer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+    <script src="/components/nav.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeNavigation();
+        });
+    </script>
+
+    <!-- Navigation -->
+    <nav class="bg-white shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex-shrink-0">
+                    <span class="text-xl font-bold text-gray-800">Notion Visualizer</span>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="/metrics" class="text-gray-600 hover:text-gray-900 px-4 py-2 text-sm font-medium">Metrics</a>
+                    <a href="/analytics" class="bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-700">Analytics</a>
+                    <a href="/insights" class="text-gray-600 hover:text-gray-900 px-4 py-2 text-sm font-medium">AI Insights</a>
+                    <a href="/gennotion" class="text-gray-600 hover:text-gray-900 px-4 py-2 text-sm font-medium">GenNotion</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Time Range Selector -->
+        <div class="mb-6">
+            <select id="timeRange" class="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                <option value="7">Last 7 days</option>
+                <option value="30" selected>Last 30 days</option>
+                <option value="90">Last 90 days</option>
+                <option value="365">Last year</option>
+            </select>
+        </div>
+
+        <!-- Activity Trends -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <!-- Page Activity -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center mb-4 group relative">
+                    <h3 class="text-lg font-semibold text-gray-900">Page Activity</h3>
+                    <div class="ml-2">
+                        <svg class="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                        </svg>
+                    </div>
+                    <div class="opacity-0 group-hover:opacity-100 transition-opacity duration-200 absolute z-10 bg-black text-white text-xs rounded p-2 w-64 -top-12 left-0">
+                        Shows the number of page edits over time, helping track workspace activity levels
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="activityChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Content Growth -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center mb-4 group relative">
+                    <h3 class="text-lg font-semibold text-gray-900">Workspace Growth</h3>
+                    <div class="ml-2">
+                        <svg class="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                        </svg>
+                    </div>
+                    <div class="opacity-0 group-hover:opacity-100 transition-opacity duration-200 absolute z-10 bg-black text-white text-xs rounded p-2 w-64 -top-12 left-0">
+                        Tracks the total number of pages in your workspace over time
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="growthChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content Distribution -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <!-- Content Types -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Content Distribution</h3>
+                <div class="chart-container">
+                    <canvas id="contentTypeChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Page Depth -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Page Depth Distribution</h3>
+                <div class="chart-container">
+                    <canvas id="depthChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Usage Patterns -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Peak Activity Times -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Peak Activity Times</h3>
+                <div class="chart-container">
+                    <canvas id="activityTimeChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Connection Patterns -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Connection Patterns</h3>
+                <div class="chart-container">
+                    <canvas id="connectionChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="analytics.js"></script>
+</body>
+</html> 
