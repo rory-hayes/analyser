@@ -1,7 +1,5 @@
 import axios from 'axios';
-
-const HEX_API_TOKEN = '5b97b8d1945b14acc5c2faed5e314310438e038640df2ff475d357993d0217826b3db99144ebf236d189778cda42898e';
-const HEX_PROJECT_ID = '21c6c24a-60e8-487c-b03a-1f04dda4f918';
+import { config } from '../config/config.js';
 
 export class HexService {
     constructor() {
@@ -11,13 +9,13 @@ export class HexService {
     async generateReport(workspaceId) {
         try {
             console.log('Generating report for workspace:', workspaceId);
-            const response = await axios.post('https://api.hex.tech/v1/projects/21c6c24a-60e8-487c-b03a-1f04dda4f918/runs', {
+            const response = await axios.post(`https://api.hex.tech/v1/projects/${config.HEX_PROJECT_ID}/runs`, {
                 parameters: {
                     workspace_id: workspaceId
                 }
             }, {
                 headers: {
-                    'Authorization': `Bearer ${HEX_API_TOKEN}`,
+                    'Authorization': `Bearer ${config.HEX_API_TOKEN}`,
                     'Content-Type': 'application/json'
                 }
             });

@@ -3,9 +3,9 @@ import axios from 'axios';
 import { HexService } from '../services/hexService.js';
 import path from 'path';
 import fs from 'fs';
+import { config } from '../config/config.js';
 
 const router = express.Router();
-const HEX_API_TOKEN = '5b97b8d1945b14acc5c2faed5e314310438e038640df2ff475d357993d0217826b3db99144ebf236d189778cda42898e';
 const hexService = new HexService();
 
 // Generate Report Endpoint
@@ -21,6 +21,11 @@ router.post('/generate-report', async (req, res) => {
             return res.status(400).json({ error: 'Workspace ID is required' });
         }
 
+        if (!config.HEX_PROJECT_ID) {
+            console.error('HEX_PROJECT_ID is not configured');
+            return res.status(500).json({ error: 'Server configuration error' });
+        }
+
         const hexResponse = await hexService.generateReport(workspaceId);
         console.log('Hex API response:', hexResponse);
 
@@ -34,7 +39,7 @@ router.post('/generate-report', async (req, res) => {
             response: error.response?.data
         });
         res.status(500).json({ 
-            error: error.message || 'Failed to generate report',
+            error: error.response?.data?.error || error.message || 'Failed to generate report',
             details: error.response?.data
         });
     }
