@@ -13,8 +13,15 @@ router.post('/generate-report', async (req, res) => {
     try {
         const { workspaceId } = req.body;
         
-        console.log('Received generate-report request:', req.body);
-        console.log('Workspace ID:', workspaceId);
+        const projectId = config.HEX_PROJECT_ID;
+        if (!projectId) {
+            throw new Error('Project ID is required');
+        }
+
+        console.log('Received generate-report request:', {
+            workspaceId,
+            projectId
+        });
 
         if (!workspaceId) {
             console.log('No workspace ID provided');
@@ -26,7 +33,7 @@ router.post('/generate-report', async (req, res) => {
             return res.status(500).json({ error: 'Server configuration error' });
         }
 
-        const hexResponse = await hexService.generateReport(workspaceId);
+        const hexResponse = await hexService.generateReport(workspaceId, projectId);
         console.log('Hex API response:', hexResponse);
 
         res.json(hexResponse);

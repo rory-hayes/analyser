@@ -6,10 +6,10 @@ export class HexService {
         this.results = new Map();
     }
 
-    async generateReport(workspaceId) {
+    async generateReport(workspaceId, projectId) {
         try {
             console.log('Generating report for workspace:', workspaceId);
-            const response = await axios.post(`https://api.hex.tech/v1/projects/${config.HEX_PROJECT_ID}/runs`, {
+            const response = await axios.post(`https://api.hex.tech/v1/projects/${projectId}/runs`, {
                 parameters: {
                     workspace_id: workspaceId
                 }

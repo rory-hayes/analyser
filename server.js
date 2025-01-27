@@ -216,8 +216,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 // Serve static files (HTML, CSS, JS)
-app.use(express.static('public'));
-app.use('/src', express.static('src'));
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Serve source maps in development
 if (process.env.NODE_ENV === 'development') {
