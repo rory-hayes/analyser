@@ -7,29 +7,62 @@ class NotionVisualizer {
     constructor() {
         this.workspaceIds = [];
         this.currentGraph = null;
-        this.metricsCalculator = new MetricsCalculator();
+        this.metricsCalculator = null;
         this.graphVisualizer = null;
         this.metricsDisplay = null;
         this.eventSource = null;
+        
+        // Initialize after DOM is loaded
+        this.initializeComponents();
         this.initializeEventListeners();
-        this.initializeGraphVisualizer();
-        this.initializeMetricsDisplay();
+    }
+
+    initializeComponents() {
+        // Initialize components
+        const graphContainer = document.getElementById('graph-container');
+        const metricsContainer = document.getElementById('metricsContainer');
+
+        import('./core/MetricsCalculator.js').then(module => {
+            this.metricsCalculator = new module.MetricsCalculator();
+        }).catch(error => console.error('Error loading MetricsCalculator:', error));
+
+        import('./core/graph-visualizer.js').then(module => {
+            if (graphContainer) {
+                this.graphVisualizer = new module.GraphVisualizer(graphContainer);
+            }
+        }).catch(error => console.error('Error loading GraphVisualizer:', error));
+
+        import('./components/MetricsDisplay.js').then(module => {
+            if (metricsContainer) {
+                this.metricsDisplay = new module.MetricsDisplay(metricsContainer);
+            }
+        }).catch(error => console.error('Error loading MetricsDisplay:', error));
     }
 
     initializeEventListeners() {
+        // Get button and input elements
         const generateBtn = document.getElementById('generateBtn');
         const workspaceInput = document.getElementById('workspaceIds');
 
-        console.log('Initializing event listeners');
-        console.log('Generate button found:', !!generateBtn);
-        console.log('Workspace input found:', !!workspaceInput);
+        if (!generateBtn || !workspaceInput) {
+            console.error('Required elements not found:', {
+                generateBtn: !!generateBtn,
+                workspaceInput: !!workspaceInput
+            });
+            return;
+        }
 
-        generateBtn.addEventListener('click', () => {
+        // Add click event listener
+        generateBtn.addEventListener('click', (e) => {
+            e.preventDefault();
             console.log('Generate button clicked');
             this.handleGenerate();
         });
+
+        // Add enter key event listener
         workspaceInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
+                e.preventDefault();
                 console.log('Enter key pressed');
                 this.handleGenerate();
             }
@@ -38,41 +71,51 @@ class NotionVisualizer {
 
     async handleGenerate() {
         console.log('handleGenerate called');
+        
+        // Get input value
         const input = document.getElementById('workspaceIds').value;
         console.log('Input value:', input);
-        this.workspaceIds = input.split(',').map(id => id.trim()).filter(Boolean);
 
-        if (this.workspaceIds.length === 0) {
-            console.log('No workspace IDs provided');
-            this.showError('Please enter at least one workspace ID');
+        if (!input) {
+            this.showError('Please enter a workspace ID');
             return;
         }
 
-        console.log('Generating report for workspace:', this.workspaceIds[0]);
-        this.showStatus('Generating report...', true);
-        await this.generateReport(this.workspaceIds[0]);
-    }
+        // Show status section
+        const statusSection = document.getElementById('statusSection');
+        if (statusSection) {
+            statusSection.classList.remove('hidden');
+        }
 
-    async generateReport(workspaceId) {
         try {
-            console.log('Sending request to generate report');
+            // Make API request
             const response = await fetch('/api/generate-report', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ workspaceId })
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ workspaceId: input })
             });
 
-            console.log('Response received:', response);
+            console.log('API Response:', response);
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
             const data = await response.json();
             console.log('Response data:', data);
-            if (!data.success) throw new Error(data.error);
 
-            this.showStatus('Report generated, waiting for results...', true);
-            this.listenForResults();
+            if (data.success) {
+                this.showStatus('Report generated successfully, fetching results...');
+                this.listenForResults();
+            } else {
+                throw new Error(data.error || 'Failed to generate report');
+            }
 
         } catch (error) {
-            console.error('Error in generateReport:', error);
-            this.showError(`Failed to generate report: ${error.message}`);
+            console.error('Error generating report:', error);
+            this.showError(`Error: ${error.message}`);
         }
     }
 
@@ -150,46 +193,29 @@ class NotionVisualizer {
         progress.textContent = `${Math.round(percentage)}%`;
     }
 
-    showStatus(message, showSpinner = false) {
+    showStatus(message) {
         const status = document.getElementById('status');
-        const spinner = document.getElementById('spinner');
-        
-        if (status) status.textContent = message;
-        if (spinner) spinner.style.display = showSpinner ? 'block' : 'none';
+        if (status) {
+            status.textContent = message;
+        }
+        console.log('Status:', message);
     }
 
     showError(message) {
-        const error = document.getElementById('error');
-        if (error) {
-            console.error('Showing error:', message);
-            error.textContent = message;
-            error.style.display = 'block';
-            error.className = 'mb-8 p-4 bg-red-100 text-red-700 rounded-lg';
+        const errorDiv = document.getElementById('error');
+        if (errorDiv) {
+            errorDiv.textContent = message;
+            errorDiv.classList.remove('hidden');
             setTimeout(() => {
-                error.style.display = 'none';
+                errorDiv.classList.add('hidden');
             }, 5000);
-        } else {
-            console.error('Error element not found');
         }
-    }
-
-    initializeGraphVisualizer() {
-        const container = document.getElementById('graph-container');
-        if (container) {
-            this.graphVisualizer = new GraphVisualizer(container);
-            window.addEventListener('resize', () => this.graphVisualizer.resize());
-        }
-    }
-
-    initializeMetricsDisplay() {
-        const container = document.getElementById('metricsContainer');
-        if (container) {
-            this.metricsDisplay = new MetricsDisplay(container);
-        }
+        console.error('Error:', message);
     }
 }
 
-// Initialize the application
+// Initialize the application when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOM loaded, initializing NotionVisualizer');
     window.visualizer = new NotionVisualizer();
 }); 

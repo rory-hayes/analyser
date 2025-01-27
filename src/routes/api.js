@@ -77,6 +77,17 @@ router.get('/test', (req, res) => {
     });
 });
 
+// Test generate endpoint
+router.post('/test-generate', (req, res) => {
+    const { workspaceId } = req.body;
+    console.log('Test generate called with:', workspaceId);
+    res.json({
+        success: true,
+        message: `Test generate called with workspace ID: ${workspaceId}`,
+        timestamp: new Date().toISOString()
+    });
+});
+
 // Debug file system route
 router.get('/debug/files', (req, res) => {
     const publicDir = path.join(process.cwd(), 'public');
