@@ -7,7 +7,7 @@
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
-    "build": "mkdir -p public/js/core public/js/components public/js/services public/js/utils && cp -r src/core/* public/js/core/ && cp -r src/components/* public/js/components/ && cp -r src/services/* public/js/services/ && cp -r src/utils/* public/js/utils/ && cp -r src/config public/js/ && cp -r src/services/aiService.js public/js/services/"
+    "build": "rm -rf public/js && mkdir -p public/js/{core,components,services,utils,config} && cp -r src/core/* public/js/core/ && cp -r src/components/* public/js/components/ && cp -r src/services/* public/js/services/ && cp -r src/utils/* public/js/utils/ && cp -r src/config/* public/js/config/"
   },
   "dependencies": {
     "@notionhq/client": "^2.2.14",

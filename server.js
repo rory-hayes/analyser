@@ -216,8 +216,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 // Serve static files (HTML, CSS, JS)
-app.use(express.static(path.join(__dirname, 'public')));
-app.use(express.static(path.join(__dirname))); // This will serve files from the src directory
+app.use(express.static('public'));
+app.use('/js', express.static('public/js'));
 
 // Add MIME type for ES modules
 app.use((req, res, next) => {
@@ -926,6 +926,31 @@ app.post('/api/notion/create-page', async (req, res) => {
         res.json(result);
     } catch (error) {
         console.error('Error creating Notion page:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Debug route to check file availability
+app.get('/debug/files', (req, res) => {
+    const publicDir = path.join(process.cwd(), 'public');
+    const files = [];
+    
+    function walkDir(dir) {
+        const items = fs.readdirSync(dir);
+        items.forEach(item => {
+            const fullPath = path.join(dir, item);
+            if (fs.statSync(fullPath).isDirectory()) {
+                walkDir(fullPath);
+            } else {
+                files.push(fullPath.replace(publicDir, ''));
+            }
+        });
+    }
+    
+    try {
+        walkDir(publicDir);
+        res.json({ files });
+    } catch (error) {
         res.status(500).json({ error: error.message });
     }
 });

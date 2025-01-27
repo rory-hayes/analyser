@@ -1,7 +1,7 @@
-import { WorkspaceGraph } from './core/workspace-graph.js';
-import { MetricsCalculator } from './core/MetricsCalculator.js';
-import { GraphVisualizer } from './core/graph-visualizer.js';
-import { MetricsDisplay } from './components/MetricsDisplay.js';
+import { WorkspaceGraph } from '/js/core/workspace-graph.js';
+import { MetricsCalculator } from '/js/core/MetricsCalculator.js';
+import { GraphVisualizer } from '/js/core/graph-visualizer.js';
+import { MetricsDisplay } from '/js/components/MetricsDisplay.js';
 
 class NotionVisualizer {
     constructor() {
@@ -27,33 +27,41 @@ class NotionVisualizer {
     }
 
     async handleGenerate() {
+        console.log('handleGenerate called');
         const input = document.getElementById('workspaceIds').value;
+        console.log('Input value:', input);
         this.workspaceIds = input.split(',').map(id => id.trim()).filter(Boolean);
 
         if (this.workspaceIds.length === 0) {
+            console.log('No workspace IDs provided');
             this.showError('Please enter at least one workspace ID');
             return;
         }
 
+        console.log('Generating report for workspace:', this.workspaceIds[0]);
         this.showStatus('Generating report...', true);
         await this.generateReport(this.workspaceIds[0]);
     }
 
     async generateReport(workspaceId) {
         try {
+            console.log('Sending request to generate report');
             const response = await fetch('/api/generate-report', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ workspaceId })
             });
 
+            console.log('Response received:', response);
             const data = await response.json();
+            console.log('Response data:', data);
             if (!data.success) throw new Error(data.error);
 
             this.showStatus('Report generated, waiting for results...', true);
             this.listenForResults();
 
         } catch (error) {
+            console.error('Error in generateReport:', error);
             this.showError(`Failed to generate report: ${error.message}`);
         }
     }
