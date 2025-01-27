@@ -32,18 +32,25 @@ export class WorkspaceGraph extends Graph {
     }
 
     getWorkspaceMetrics() {
-        const depths = this.calculateDepths();
-        const maxDepth = Math.max(...depths.values());
-        const avgDepth = [...depths.values()].reduce((a, b) => a + b, 0) / depths.size;
-
         return {
             totalNodes: this.nodes.length,
-            totalLinks: this.links.length,
-            maxDepth,
-            avgDepth,
-            rootNodes: this.nodes.filter(n => !this.links.some(l => l.target === n.id)).length,
-            leafNodes: this.nodes.filter(n => !this.links.some(l => l.source === n.id)).length
+            maxDepth: this.calculateMaxDepth(),
+            avgDepth: this.calculateAverageDepth(),
+            rootNodes: this.getRootNodes().length
         };
+    }
+
+    calculateMaxDepth() {
+        return Math.max(...this.nodes.map(node => node.depth || 0));
+    }
+
+    calculateAverageDepth() {
+        const depths = this.nodes.map(node => node.depth || 0);
+        return depths.reduce((a, b) => a + b, 0) / depths.length;
+    }
+
+    getRootNodes() {
+        return this.nodes.filter(node => !node.parent_id);
     }
 
     getTimelineData() {

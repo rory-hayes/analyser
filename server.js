@@ -216,8 +216,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 // Serve static files (HTML, CSS, JS)
-app.use(express.static(path.join(process.cwd(), 'public')));
-app.use('/js', express.static(path.join(process.cwd(), 'public/js')));
+app.use('/', express.static('public'));
+app.use('/js', express.static('public/js'));
 
 // Serve source maps in development
 if (process.env.NODE_ENV === 'development') {
@@ -977,6 +977,13 @@ app.use((err, req, res, next) => {
         error: 'Internal Server Error',
         message: process.env.NODE_ENV === 'development' ? err.message : undefined
     });
+});
+
+// Add CORS headers for development
+app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+    next();
 });
 
 // Start the Server

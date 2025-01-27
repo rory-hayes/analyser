@@ -7,7 +7,7 @@
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
-    "build": "rm -rf public/js && mkdir -p public/js/{core,components,services,utils,config} && cp src/core/MetricsCalculator.js public/js/core/ && cp src/core/workspace-graph.js public/js/core/ && cp src/core/graph-visualizer.js public/js/core/ && cp src/components/MetricsDisplay.js public/js/components/ && cp -r src/services/* public/js/services/ && cp -r src/utils/* public/js/utils/ && cp -r src/config/* public/js/config/"
+    "build": "mkdir -p public/js/{core,components,services,utils,config} && cp -r src/core/*.js public/js/core/ && cp -r src/components/*.js public/js/components/ && cp -r src/services/*.js public/js/services/ && cp -r src/utils/*.js public/js/utils/ && cp -r src/config/*.js public/js/config/"
   },
   "dependencies": {
     "@notionhq/client": "^2.2.14",

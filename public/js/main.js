@@ -1,42 +1,33 @@
-import { WorkspaceGraph } from '/js/core/workspace-graph.js';
-import { MetricsCalculator } from '/js/core/MetricsCalculator.js';
-import { GraphVisualizer } from '/js/core/graph-visualizer.js';
-import { MetricsDisplay } from '/js/components/MetricsDisplay.js';
+import { WorkspaceGraph } from './core/workspace-graph.js';
+import { MetricsCalculator } from './core/MetricsCalculator.js';
+import { GraphVisualizer } from './core/graph-visualizer.js';
+import { MetricsDisplay } from './components/MetricsDisplay.js';
 
 class NotionVisualizer {
     constructor() {
         this.workspaceIds = [];
         this.currentGraph = null;
-        this.metricsCalculator = null;
+        this.metricsCalculator = new MetricsCalculator();
         this.graphVisualizer = null;
         this.metricsDisplay = null;
         this.eventSource = null;
         
         // Initialize after DOM is loaded
-        this.initializeComponents();
+        this.initializeVisualizers();
         this.initializeEventListeners();
     }
 
-    initializeComponents() {
-        // Initialize components
+    initializeVisualizers() {
         const graphContainer = document.getElementById('graph-container');
         const metricsContainer = document.getElementById('metricsContainer');
 
-        import('./core/MetricsCalculator.js').then(module => {
-            this.metricsCalculator = new module.MetricsCalculator();
-        }).catch(error => console.error('Error loading MetricsCalculator:', error));
-
-        import('./core/graph-visualizer.js').then(module => {
-            if (graphContainer) {
-                this.graphVisualizer = new module.GraphVisualizer(graphContainer);
-            }
-        }).catch(error => console.error('Error loading GraphVisualizer:', error));
-
-        import('./components/MetricsDisplay.js').then(module => {
-            if (metricsContainer) {
-                this.metricsDisplay = new module.MetricsDisplay(metricsContainer);
-            }
-        }).catch(error => console.error('Error loading MetricsDisplay:', error));
+        if (graphContainer) {
+            this.graphVisualizer = new GraphVisualizer(graphContainer);
+        }
+        
+        if (metricsContainer) {
+            this.metricsDisplay = new MetricsDisplay(metricsContainer);
+        }
     }
 
     initializeEventListeners() {

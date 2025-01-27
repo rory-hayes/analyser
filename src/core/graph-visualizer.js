@@ -81,78 +81,8 @@ export class GraphVisualizer {
     }
 
     visualize(graph) {
-        const data = graph.toD3Format();
-        
-        // Clear existing visualization
-        this.svg.select('g').remove();
-
-        const g = this.svg.append('g');
-
-        // Create the simulation
-        this.simulation = d3.forceSimulation(data.nodes)
-            .force('link', d3.forceLink(data.links)
-                .id(d => d.id)
-                .distance(this.options.linkDistance))
-            .force('charge', d3.forceManyBody().strength(-300))
-            .force('center', d3.forceCenter(this.options.width / 2, this.options.height / 2))
-            .force('collision', d3.forceCollide().radius(this.options.nodeRadius * 1.5));
-
-        // Create links
-        const links = g.append('g')
-            .selectAll('line')
-            .data(data.links)
-            .join('line')
-            .attr('class', 'link')
-            .style('stroke', '#E5E7EB')
-            .style('stroke-width', 1);
-
-        // Create nodes
-        const nodes = g.append('g')
-            .selectAll('circle')
-            .data(data.nodes)
-            .join('circle')
-            .attr('class', 'node')
-            .attr('r', this.options.nodeRadius)
-            .style('fill', d => this.getNodeColor(d.type))
-            .call(this.drag());
-
-        // Add node labels
-        const labels = g.append('g')
-            .selectAll('text')
-            .data(data.nodes)
-            .join('text')
-            .attr('class', 'node-label')
-            .text(d => d.title)
-            .attr('dx', 12)
-            .attr('dy', 4);
-
-        // Add node interactions
-        nodes
-            .on('mouseover', (event, d) => this.handleNodeMouseOver(event, d))
-            .on('mouseout', (event, d) => this.handleNodeMouseOut(event, d))
-            .on('click', (event, d) => this.handleNodeClick(event, d));
-
-        // Update positions on each tick
-        this.simulation.on('tick', () => {
-            links
-                .attr('x1', d => d.source.x)
-                .attr('y1', d => d.source.y)
-                .attr('x2', d => d.target.x)
-                .attr('y2', d => d.target.y);
-
-            nodes
-                .attr('cx', d => d.x)
-                .attr('cy', d => d.y);
-
-            labels
-                .attr('x', d => d.x)
-                .attr('y', d => d.y);
-        });
-
-        // Add timeline if there's temporal data
-        if (graph.getTimelineData().length > 0) {
-            this.addTimeline(graph.getTimelineData());
-        }
+        // Implementation will use D3.js
+        console.log('Visualizing graph:', graph);
     }
 
     getNodeColor(type) {
@@ -277,8 +207,8 @@ export class GraphVisualizer {
     }
 
     resize() {
-        this.options.width = this.container.clientWidth;
-        this.options.height = this.container.clientHeight;
+        this.width = this.container.clientWidth;
+        this.height = this.container.clientHeight;
         this.svg
             .attr('width', this.options.width)
             .attr('height', this.options.height)
