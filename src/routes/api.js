@@ -1,6 +1,8 @@
 import express from 'express';
 import axios from 'axios';
 import { HexService } from '../services/hexService.js';
+import path from 'path';
+import fs from 'fs';
 
 const router = express.Router();
 const HEX_API_TOKEN = '5b97b8d1945b14acc5c2faed5e314310438e038640df2ff475d357993d0217826b3db99144ebf236d189778cda42898e';
@@ -73,6 +75,40 @@ router.get('/test', (req, res) => {
         message: 'API is working',
         timestamp: new Date().toISOString()
     });
+});
+
+// Debug file system route
+router.get('/debug/files', (req, res) => {
+    const publicDir = path.join(process.cwd(), 'public');
+    const files = [];
+    
+    function walkDir(dir) {
+        const items = fs.readdirSync(dir);
+        items.forEach(item => {
+            const fullPath = path.join(dir, item);
+            const stat = fs.statSync(fullPath);
+            if (stat.isDirectory()) {
+                walkDir(fullPath);
+            } else {
+                files.push({
+                    path: fullPath.replace(publicDir, ''),
+                    size: stat.size,
+                    modified: stat.mtime
+                });
+            }
+        });
+    }
+    
+    try {
+        walkDir(publicDir);
+        res.json({ 
+            root: publicDir,
+            files,
+            env: process.env.NODE_ENV
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
 });
 
 export default router; 

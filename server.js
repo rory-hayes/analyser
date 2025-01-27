@@ -216,8 +216,13 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 // Serve static files (HTML, CSS, JS)
-app.use(express.static('public'));
-app.use('/js', express.static('public/js'));
+app.use(express.static(path.join(process.cwd(), 'public')));
+app.use('/js', express.static(path.join(process.cwd(), 'public/js')));
+
+// Serve source maps in development
+if (process.env.NODE_ENV === 'development') {
+    app.use('/src', express.static(path.join(process.cwd(), 'src')));
+}
 
 // Add MIME type for ES modules
 app.use((req, res, next) => {
@@ -231,6 +236,10 @@ app.use((req, res, next) => {
 app.use((req, res, next) => {
     console.log('Requested URL:', req.url);
     console.log('Server root directory:', __dirname);
+    if (req.url.endsWith('.js')) {
+        console.log('Looking for JS file:', path.join(process.cwd(), 'public', req.url));
+        console.log('File exists:', fs.existsSync(path.join(process.cwd(), 'public', req.url)));
+    }
     next();
 });
 

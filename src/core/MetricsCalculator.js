@@ -5,18 +5,70 @@ export class MetricsCalculator {
         this.DEEP_PAGE_THRESHOLD = 5;
         this.BOTTLENECK_THRESHOLD = 10;
         this.UNFINDABLE_DEPTH = 4;
+        this.metrics = {};
     }
 
-    calculateAllMetrics(dataframe_2, dataframe_3) {
-        // Create workspace graph for structural analysis
-        const graph = new WorkspaceGraph(dataframe_2, dataframe_3);
+    calculateAllMetrics(nodes, links) {
+        return {
+            totalPages: this.calculateTotalPages(nodes),
+            averageDepth: this.calculateAverageDepth(nodes),
+            organizationScore: this.calculateOrganizationScore(nodes),
+            connectivityScore: this.calculateConnectivityScore(nodes, links),
+            activityScore: this.calculateActivityScore(nodes),
+            healthMetrics: this.calculateHealthMetrics(nodes)
+        };
+    }
+
+    calculateTotalPages(nodes) {
+        return nodes.length;
+    }
+
+    calculateAverageDepth(nodes) {
+        const depths = nodes.map(node => node.depth || 0);
+        return depths.reduce((a, b) => a + b, 0) / depths.length;
+    }
+
+    calculateOrganizationScore(nodes) {
+        const totalNodes = nodes.length;
+        const templatesCount = nodes.filter(node => node.is_template).length;
+        const databasesCount = nodes.filter(node => node.type === 'database').length;
         
         return {
-            ...this.calculateStructureMetrics(graph),
-            ...this.calculateUsageMetrics(dataframe_3),
-            ...this.calculateGrowthMetrics(graph, dataframe_3),
-            ...this.calculateOrganizationMetrics(graph, dataframe_3),
-            ...this.calculateROIMetrics(dataframe_3)
+            score: ((templatesCount + databasesCount) / totalNodes) * 100,
+            templates: templatesCount,
+            databases: databasesCount
+        };
+    }
+
+    calculateConnectivityScore(nodes, links) {
+        const totalPossibleConnections = nodes.length * (nodes.length - 1) / 2;
+        const actualConnections = links.length;
+        return (actualConnections / totalPossibleConnections) * 100;
+    }
+
+    calculateActivityScore(nodes) {
+        const now = new Date();
+        const thirtyDaysAgo = new Date(now - 30 * 24 * 60 * 60 * 1000);
+        
+        const activeNodes = nodes.filter(node => {
+            const lastEdited = new Date(node.last_edited_time);
+            return lastEdited >= thirtyDaysAgo;
+        });
+
+        return {
+            score: (activeNodes.length / nodes.length) * 100,
+            activePages: activeNodes.length
+        };
+    }
+
+    calculateHealthMetrics(nodes) {
+        const orphanedPages = nodes.filter(node => !node.parent_id && !node.has_children).length;
+        const maxDepth = Math.max(...nodes.map(node => node.depth || 0));
+        
+        return {
+            orphanedPages,
+            maxDepth,
+            healthScore: Math.max(0, 100 - (orphanedPages * 5) - (Math.max(0, maxDepth - 5) * 10))
         };
     }
 
