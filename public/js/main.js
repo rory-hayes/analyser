@@ -1,7 +1,7 @@
-import { WorkspaceGraph } from './core/workspace-graph.js';
-import { MetricsCalculator } from './core/MetricsCalculator.js';
-import { GraphVisualizer } from './core/graph-visualizer.js';
-import { MetricsDisplay } from './components/MetricsDisplay.js';
+import { WorkspaceGraph } from '../src/core/workspace-graph.js';
+import { MetricsCalculator } from '../src/core/MetricsCalculator.js';
+import { GraphVisualizer } from '../src/core/graph-visualizer.js';
+import { MetricsDisplay } from '../src/components/MetricsDisplay.js';
 
 class NotionVisualizer {
     constructor() {
@@ -12,14 +12,14 @@ class NotionVisualizer {
         this.metricsDisplay = null;
         this.eventSource = null;
         
-        // Initialize after DOM is loaded
-        this.initializeVisualizers();
-        this.initializeEventListeners();
+        this.initialize();
     }
 
-    initializeVisualizers() {
+    initialize() {
         const graphContainer = document.getElementById('graph-container');
         const metricsContainer = document.getElementById('metricsContainer');
+        const generateBtn = document.getElementById('generateBtn');
+        const workspaceInput = document.getElementById('workspaceIds');
 
         if (graphContainer) {
             this.graphVisualizer = new GraphVisualizer(graphContainer);
@@ -28,85 +28,93 @@ class NotionVisualizer {
         if (metricsContainer) {
             this.metricsDisplay = new MetricsDisplay(metricsContainer);
         }
-    }
 
-    initializeEventListeners() {
-        // Get button and input elements
-        const generateBtn = document.getElementById('generateBtn');
-        const workspaceInput = document.getElementById('workspaceIds');
+        if (generateBtn) {
+            generateBtn.addEventListener('click', async () => {
+                try {
+                    const workspaceIds = workspaceInput.value.split(',')
+                        .map(id => id.trim())
+                        .filter(Boolean);
+                    
+                    if (workspaceIds.length === 0) {
+                        this.showError('Please enter at least one workspace ID');
+                        return;
+                    }
 
-        if (!generateBtn || !workspaceInput) {
-            console.error('Required elements not found:', {
-                generateBtn: !!generateBtn,
-                workspaceInput: !!workspaceInput
+                    // Show status section and spinner
+                    this.showStatus('Initiating report generation...', true);
+                    
+                    // Process each workspace ID
+                    for (const workspaceId of workspaceIds) {
+                        await this.processWorkspace(workspaceId);
+                    }
+                } catch (error) {
+                    console.error('Error generating report:', error);
+                    this.showError('Error generating report. Please try again.');
+                }
             });
-            return;
         }
-
-        // Add click event listener
-        generateBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            console.log('Generate button clicked');
-            this.handleGenerate();
-        });
-
-        // Add enter key event listener
-        workspaceInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                console.log('Enter key pressed');
-                this.handleGenerate();
-            }
-        });
     }
 
-    async handleGenerate() {
-        console.log('handleGenerate called');
-        
-        // Get input value
-        const input = document.getElementById('workspaceIds').value;
-        console.log('Input value:', input);
-
-        if (!input) {
-            this.showError('Please enter a workspace ID');
-            return;
-        }
-
-        // Show status section
-        const statusSection = document.getElementById('statusSection');
-        if (statusSection) {
-            statusSection.classList.remove('hidden');
-        }
-
+    async processWorkspace(workspaceId) {
         try {
-            // Make API request
+            if (!workspaceId) {
+                throw new Error('Workspace ID is required');
+            }
+
+            this.showStatus('Checking server status...', true);
+            
+            const isServerHealthy = await this.checkServerStatus();
+            if (!isServerHealthy) {
+                this.showStatus('Server is not responding. Please try again later.');
+                return;
+            }
+
+            // Trigger Hex report
+            this.showStatus(`Triggering report for workspace ${workspaceId}...`, true);
+
             const response = await fetch('/api/generate-report', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ workspaceId: input })
+                body: JSON.stringify({ workspaceId: workspaceId.trim() })
             });
 
-            console.log('API Response:', response);
+            const data = await response.json();
 
             if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                throw new Error(data.error || 'Failed to trigger report');
             }
 
-            const data = await response.json();
-            console.log('Response data:', data);
-
-            if (data.success) {
-                this.showStatus('Report generated successfully, fetching results...');
-                this.listenForResults();
-            } else {
-                throw new Error(data.error || 'Failed to generate report');
+            if (!data.success || !data.runId) {
+                throw new Error('Invalid response from server');
             }
+
+            console.log('Report generation triggered:', {
+                success: data.success,
+                runId: data.runId
+            });
+
+            this.showStatus(`Report triggered for workspace ${workspaceId}. Waiting for results...`, true);
+            
+            // Start listening for results
+            this.listenForResults();
 
         } catch (error) {
-            console.error('Error generating report:', error);
-            this.showError(`Error: ${error.message}`);
+            console.error('Error processing workspace:', error);
+            let errorMessage = error.message;
+            
+            // Add more context for specific errors
+            if (errorMessage.includes('Hex API Error')) {
+                errorMessage += '. Please check your Hex API configuration.';
+            } else if (errorMessage.includes('Invalid Hex API key')) {
+                errorMessage = 'API key is invalid or expired. Please update your configuration.';
+            } else if (errorMessage.includes('Hex project not found')) {
+                errorMessage = 'Hex project configuration is incorrect. Please verify the project ID.';
+            }
+            
+            this.showStatus(`Error processing workspace ${workspaceId}: ${errorMessage}`, false);
         }
     }
 
@@ -184,12 +192,24 @@ class NotionVisualizer {
         progress.textContent = `${Math.round(percentage)}%`;
     }
 
-    showStatus(message) {
+    showStatus(message, isLoading) {
         const status = document.getElementById('status');
         if (status) {
             status.textContent = message;
         }
         console.log('Status:', message);
+
+        if (isLoading) {
+            const spinner = document.getElementById('spinner');
+            if (spinner) {
+                spinner.classList.remove('hidden');
+            }
+        } else {
+            const spinner = document.getElementById('spinner');
+            if (spinner) {
+                spinner.classList.add('hidden');
+            }
+        }
     }
 
     showError(message) {
@@ -202,6 +222,12 @@ class NotionVisualizer {
             }, 5000);
         }
         console.error('Error:', message);
+    }
+
+    async checkServerStatus() {
+        // Implementation of checkServerStatus method
+        // This is a placeholder and should be replaced with the actual implementation
+        return true; // Placeholder return, actual implementation needed
     }
 }
 

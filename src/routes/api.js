@@ -95,36 +95,24 @@ router.post('/test-generate', (req, res) => {
 
 // Debug file system route
 router.get('/debug/files', (req, res) => {
-    const publicDir = path.join(process.cwd(), 'public');
-    const files = [];
+    const files = {
+        src: fs.existsSync('src'),
+        public: fs.existsSync('public'),
+        'public/js': fs.existsSync('public/js'),
+        'src/core': fs.existsSync('src/core'),
+        'src/components': fs.existsSync('src/components'),
+        'public/js/main.js': fs.existsSync('public/js/main.js'),
+        'src/core/workspace-graph.js': fs.existsSync('src/core/workspace-graph.js'),
+        'src/core/MetricsCalculator.js': fs.existsSync('src/core/MetricsCalculator.js'),
+        'src/core/graph-visualizer.js': fs.existsSync('src/core/graph-visualizer.js'),
+        'src/components/MetricsDisplay.js': fs.existsSync('src/components/MetricsDisplay.js')
+    };
     
-    function walkDir(dir) {
-        const items = fs.readdirSync(dir);
-        items.forEach(item => {
-            const fullPath = path.join(dir, item);
-            const stat = fs.statSync(fullPath);
-            if (stat.isDirectory()) {
-                walkDir(fullPath);
-            } else {
-                files.push({
-                    path: fullPath.replace(publicDir, ''),
-                    size: stat.size,
-                    modified: stat.mtime
-                });
-            }
-        });
-    }
-    
-    try {
-        walkDir(publicDir);
-        res.json({ 
-            root: publicDir,
-            files,
-            env: process.env.NODE_ENV
-        });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
+    res.json({
+        files,
+        cwd: process.cwd(),
+        env: process.env.NODE_ENV
+    });
 });
 
 export default router; 

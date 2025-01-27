@@ -216,8 +216,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 // Serve static files (HTML, CSS, JS)
-app.use('/', express.static('public'));
-app.use('/js', express.static('public/js'));
+app.use(express.static('public'));
+app.use('/src', express.static('src'));
 
 // Serve source maps in development
 if (process.env.NODE_ENV === 'development') {
@@ -227,7 +227,7 @@ if (process.env.NODE_ENV === 'development') {
 // Add MIME type for ES modules
 app.use((req, res, next) => {
     if (req.url.endsWith('.js')) {
-        res.type('application/javascript');
+        res.type('application/javascript; charset=utf-8');
     }
     next();
 });

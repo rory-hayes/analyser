@@ -1,19 +1,15 @@
 export class Graph {
-    constructor(nodes = [], links = []) {
-        this.nodes = nodes;
-        this.links = links;
+    constructor() {
+        this.nodes = [];
+        this.links = [];
     }
 
     addNode(node) {
-        if (!this.nodes.find(n => n.id === node.id)) {
-            this.nodes.push(node);
-        }
+        this.nodes.push(node);
     }
 
     addLink(source, target) {
-        if (!this.links.find(l => l.source === source && l.target === target)) {
-            this.links.push({ source, target });
-        }
+        this.links.push({ source, target });
     }
 
     getNodeById(id) {
