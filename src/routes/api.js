@@ -12,8 +12,10 @@ router.post('/generate-report', async (req, res) => {
         const { workspaceId } = req.body;
         
         console.log('Received generate-report request:', req.body);
+        console.log('Workspace ID:', workspaceId);
 
         if (!workspaceId) {
+            console.log('No workspace ID provided');
             return res.status(400).json({ error: 'Workspace ID is required' });
         }
 
@@ -24,6 +26,11 @@ router.post('/generate-report', async (req, res) => {
 
     } catch (error) {
         console.error('Error in generate-report:', error);
+        console.error('Error details:', {
+            message: error.message,
+            stack: error.stack,
+            response: error.response?.data
+        });
         res.status(500).json({ 
             error: error.message || 'Failed to generate report',
             details: error.response?.data
@@ -55,6 +62,15 @@ router.get('/health', (req, res) => {
     res.json({ 
         status: 'healthy',
         environment: process.env.NODE_ENV,
+        timestamp: new Date().toISOString()
+    });
+});
+
+// Test endpoint
+router.get('/test', (req, res) => {
+    res.json({
+        status: 'ok',
+        message: 'API is working',
         timestamp: new Date().toISOString()
     });
 });

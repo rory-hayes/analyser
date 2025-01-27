@@ -20,9 +20,19 @@ class NotionVisualizer {
         const generateBtn = document.getElementById('generateBtn');
         const workspaceInput = document.getElementById('workspaceIds');
 
-        generateBtn.addEventListener('click', () => this.handleGenerate());
+        console.log('Initializing event listeners');
+        console.log('Generate button found:', !!generateBtn);
+        console.log('Workspace input found:', !!workspaceInput);
+
+        generateBtn.addEventListener('click', () => {
+            console.log('Generate button clicked');
+            this.handleGenerate();
+        });
         workspaceInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') this.handleGenerate();
+            if (e.key === 'Enter') {
+                console.log('Enter key pressed');
+                this.handleGenerate();
+            }
         });
     }
 
@@ -151,11 +161,15 @@ class NotionVisualizer {
     showError(message) {
         const error = document.getElementById('error');
         if (error) {
+            console.error('Showing error:', message);
             error.textContent = message;
             error.style.display = 'block';
+            error.className = 'mb-8 p-4 bg-red-100 text-red-700 rounded-lg';
             setTimeout(() => {
                 error.style.display = 'none';
             }, 5000);
+        } else {
+            console.error('Error element not found');
         }
     }
 

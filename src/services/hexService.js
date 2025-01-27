@@ -5,22 +5,16 @@ const HEX_PROJECT_ID = '21c6c24a-60e8-487c-b03a-1f04dda4f918';
 
 export class HexService {
     constructor() {
-        this.results = {
-            dataframe_2: [],
-            dataframe_3: null
-        };
+        this.results = new Map();
     }
 
     async generateReport(workspaceId) {
         try {
-            const url = `https://app.hex.tech/api/v1/project/${HEX_PROJECT_ID}/run`;
-            
-            const response = await axios.post(url, {
-                inputParams: {
-                    _input_text: workspaceId.toString()
-                },
-                updatePublishedResults: false,
-                useCachedSqlResults: true
+            console.log('Generating report for workspace:', workspaceId);
+            const response = await axios.post('https://api.hex.tech/v1/projects/21c6c24a-60e8-487c-b03a-1f04dda4f918/runs', {
+                parameters: {
+                    workspace_id: workspaceId
+                }
             }, {
                 headers: {
                     'Authorization': `Bearer ${HEX_API_TOKEN}`,
@@ -28,18 +22,19 @@ export class HexService {
                 }
             });
 
-            if (!response.data?.runId) {
-                throw new Error('Invalid response from Hex API');
-            }
-
+            console.log('Hex API response:', response.data);
             return {
                 success: true,
-                runId: response.data.runId,
-                data: response.data
+                runId: response.data.run_id
             };
 
         } catch (error) {
-            console.error('Error generating Hex report:', error);
+            console.error('Error in generateReport:', error);
+            console.error('Error details:', {
+                status: error.response?.status,
+                data: error.response?.data,
+                message: error.message
+            });
             throw error;
         }
     }
